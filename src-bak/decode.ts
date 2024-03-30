@@ -23,7 +23,7 @@ function decode(encodeMsg: string, molecule: MixedType): any {
   const headerOffsetArray = encodeMsg
     .slice(offsetSize, offsetSize * (tables.length + 1))
     .match(/\w{8}/g)
-    ?.map((item) => parseInt(`0x${item.replace(/^0+$/, "")}`, 16) * 2);
+    ?.map((item) => parseInt(`0x${item.replace(/0+$/, "")}`, 16) * 2);
 
   if (!headerOffsetArray) throw "error";
 
