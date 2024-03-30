@@ -20,19 +20,6 @@ export const toUint32Le = (uint32: HexType | bigint): HexType => {
 
   return `0x${hexString}`;
 };
-export const toUint32 = (uint32: HexType | bigint): HexType => {
-  const dataView = new DataView(new ArrayBuffer(4)); // 4字节 32位长度
-
-  // littleEndian 参数
-  // true  表示，低位汇编存储格式 (这里根据Molecule规范, 采用低位存储)
-  // false 表示，高位汇编存储格式
-  dataView.setUint32(0, Number(uint32), true);
-
-  // 得到完整的 4字节 低位存储 hex str
-  const hexString = dataView.getUint32(0, true).toString(16).padStart(8, "0");
-
-  return `0x${hexString}`;
-};
 
 export const hexToBytes = (hex: HexType | bigint): Uint8Array => {
   let hexStr =
@@ -68,6 +55,8 @@ export const serializeArray = (value: HexType | Uint8Array): HexType => {
   return bytesToHex(hexToBytes(value));
 };
 
+export const deserializeArray = serializeArray;
+
 export const serializeBytes = (value: HexType | Uint8Array): HexType => {
   const body = serializeArray(value);
 
@@ -77,4 +66,14 @@ export const serializeBytes = (value: HexType | Uint8Array): HexType => {
   return `0x${toUint32Le(bytesToHex(hexToBytes(BigInt(valueSize)))).slice(
     2
   )}${body.slice(2)}`;
+};
+
+export const deserializeBytes = (value: Uint8Array): HexType => {
+  return serializeArray(value.slice(4));
+};
+
+export const deserializeU32 = (value: Uint8Array): HexType => {
+  return `0x${(
+    parseInt(toUint32Le(bytesToHex(value)), 16) & 0xfffffff
+  ).toString(16)}`;
 };

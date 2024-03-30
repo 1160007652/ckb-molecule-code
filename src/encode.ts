@@ -1,22 +1,13 @@
 // table MixedType { f1: Bytes, f2: byte, f3: Uint32, f4: Byte3, f5: Bytes }
 
-import type { HexType } from "./types";
+import type { HexType, IMolecule, IMoleculeType } from "./types";
 import {
   bytesToHex,
   hexToBytes,
   serializeArray,
   serializeBytes,
-  toUint32,
   toUint32Le,
 } from "./utils";
-
-type UtilType = "Bytes" | "byte" | "Uint32" | `Byte${number}`;
-
-type IMolecule = Record<string, HexType | Uint8Array>;
-
-type IMoleculeType<T> = {
-  [K in keyof T]: UtilType;
-};
 
 // uint32 低位存储, 00 00 00 00
 const offsetSize = 4;
@@ -24,7 +15,7 @@ const offsetSize = 4;
 function encode<T extends IMolecule>(
   molecule: T,
   moleculeType: IMoleculeType<T>
-): string {
+): HexType {
   // 提取编码元素的key键, 用于映射
   const moleculeKeys = Object.keys(molecule);
 

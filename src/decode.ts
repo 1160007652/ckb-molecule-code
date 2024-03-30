@@ -1,93 +1,70 @@
 // table MixedType { f1: Bytes, f2: byte, f3: Uint32, f4: Byte3, f5: Bytes }
 
-type UtilType = "Bytes" | "byte" | "Uint32" | `Byte${number}`;
-
-interface MixedTypeValue {
-  type: UtilType;
-  value: string;
-}
-
-interface MixedType {
-  [key: string]: MixedTypeValue;
-}
+import type { HexType, UtilType } from "./types";
+import {
+  deserializeArray,
+  deserializeBytes,
+  deserializeU32,
+  hexToBytes,
+} from "./utils";
 
 // uint32 低位存储, 00 00 00 00
-const offsetSize = 8;
-const fullLengthSize = 8;
+const offsetSize = 4;
 
-function decode(encodeMsg: string, molecule: MixedType): any {
-  const tables = Object.keys(molecule);
+function decode(msg: HexType, moleculeType: UtilType[]): HexType[] {
+  const msgBytes = hexToBytes(msg);
 
-  encodeMsg = encodeMsg.replace("0x", "");
+  const offsetBytes = groupUint8ArrayUint32(
+    msgBytes.slice(offsetSize, offsetSize * (moleculeType.length + 1)),
+    offsetSize
+  );
 
-  const headerOffsetArray = encodeMsg
-    .slice(offsetSize, offsetSize * (tables.length + 1))
-    .match(/\w{8}/g)
-    ?.map((item) => parseInt(`0x${item.replace(/^0+$/, "")}`, 16) * 2);
-
-  if (!headerOffsetArray) throw "error";
-
-  const bodyMolecule = headerOffsetArray.map((item, index) => {
-    return encodeMsg.slice(item, headerOffsetArray[index + 1]);
+  const bodyBytes = offsetBytes.map((offset, index) => {
+    return msgBytes.slice(offset, offsetBytes[index + 1]);
   });
 
-  tables.forEach((item, index) => {
-    if (molecule[item].type == "Bytes") {
-      const bytesValue = `${bodyMolecule[index].replace(/0+$/, "")}`;
-      if (bytesValue == "") {
-        molecule[item].value = "0x";
-      } else {
-        molecule[item].value = `0x${bytesValue.slice(8)}`;
-      }
+  const bodys: HexType[] = [];
+
+  bodyBytes.forEach((body, index) => {
+    const itemType = moleculeType[index];
+
+    if (itemType == "Uint32") {
+      bodys.push(deserializeU32(body));
     }
-
-    if (molecule[item].type == "byte") {
-      molecule[item].value = `0x${bodyMolecule[index].replace(/0+$/, "")}`;
+    if (itemType === "byte") {
+      bodys.push(deserializeArray(body));
     }
-
-    if (/^Byte\d+/g.test(molecule[item].type)) {
-      molecule[item].value = `0x${bodyMolecule[index].replace(/0+$/, "")}`;
+    if (/^Byte\d+/g.test(itemType)) {
+      bodys.push(deserializeArray(body));
     }
-
-    if (molecule[item].type == "Uint32") {
-      let uint32Value = [
-        ...bodyMolecule[index].replace(/0+$/, "").matchAll(/\w{2}/g),
-      ];
-      uint32Value = uint32Value.reverse();
-
-      molecule[item].value = `0x${uint32Value.join("").replace(/^0+/, "")}`;
+    if (itemType === "Bytes") {
+      bodys.push(deserializeBytes(body));
     }
   });
 
-  return molecule;
+  return bodys;
+}
+
+function groupUint8ArrayUint32(
+  uint8Array: Uint8Array,
+  groupSize: number
+): number[] {
+  const result: number[] = [];
+  for (let i = 0; i < uint8Array.length; i += groupSize) {
+    // 取 32 位的 uint
+    const number = new Uint32Array(
+      new Uint8Array(Array.from(uint8Array.slice(i, i + groupSize))).buffer
+    )[0];
+    result.push(number);
+  }
+  return result;
 }
 
 const data =
   "0x2b000000180000001c0000001d000000210000002400000000000000ab2301000045678903000000abcdef";
+const moleculeType: UtilType[] = ["Bytes", "byte", "Uint32", "Byte3", "Bytes"];
+const result = decode(data, moleculeType);
 
-const schema: MixedType = {
-  f1: {
-    type: "Bytes",
-    value: "",
-  },
-  f2: {
-    type: "byte",
-    value: "",
-  },
-  f3: {
-    type: "Uint32",
-    value: "",
-  },
-  f4: {
-    type: "Byte3",
-    value: "",
-  },
-  f5: {
-    type: "Bytes",
-    value: "",
-  },
-};
-
-const result = decode(data, schema);
 console.log(data);
 console.log(result);
+console.log(moleculeType);
