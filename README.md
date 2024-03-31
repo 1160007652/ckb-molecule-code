@@ -35,9 +35,8 @@ table MixedType {
 
 > MixedType { f1: 0x, f2: 0xab, f3: 0x123, f4: 0x456789, f5: 0xabcdef }
 
+## Table Encode
 ```
-【Table Encode】
-
 空字节的序列化字节为00 00 00 00（任何空固定向量的长度为0)
 
 Bytes  0x            00 00 00 00
