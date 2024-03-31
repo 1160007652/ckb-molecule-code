@@ -1,18 +1,18 @@
 // table MixedType { f1: Bytes, f2: byte, f3: Uint32, f4: Byte3, f5: Bytes }
 
-import type { HexType, IMolecule, IMoleculeType } from "./types";
+import type { HexType, IMolecule, IMoleculeType } from "../types";
 import {
   bytesToHex,
   hexToBytes,
   serializeArray,
   serializeBytes,
   toUint32Le,
-} from "./utils";
+} from "../utils";
 
 // uint32 低位存储, 00 00 00 00
 const offsetSize = 4;
 
-function encode<T extends IMolecule>(
+export default function encode<T extends IMolecule>(
   molecule: T,
   moleculeType: IMoleculeType<T>
 ): HexType {
@@ -60,24 +60,3 @@ function encode<T extends IMolecule>(
 
   return `${headerHex}${offsetHex}${bodyHex}`;
 }
-
-const deserialized: IMolecule = {
-  f1: "0x",
-  f2: "0xab",
-  f3: "0x123",
-  f4: "0x456789",
-  f6: "0xabcdef",
-};
-
-const deserializedType: IMoleculeType<typeof deserialized> = {
-  f1: "Bytes",
-  f2: "byte",
-  f3: "Uint32",
-  f4: "Byte3",
-  f6: "Bytes",
-};
-
-const result = encode(deserialized, deserializedType);
-
-console.log(JSON.stringify([deserialized, deserializedType], null, 2));
-console.log(result);

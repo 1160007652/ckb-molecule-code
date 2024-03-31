@@ -8,7 +8,14 @@ export class MoleculeError extends Error {
 }
 
 export const toUint32Le = (uint32: HexType | bigint): HexType => {
-  const dataView = new DataView(new ArrayBuffer(4)); // 4字节 32位长度
+  // 4字节 32位长度
+  const ab = new ArrayBuffer(4);
+
+  if (ab.byteLength !== 4) {
+    throw new MoleculeError("ArrayBuffer memory allocation failed");
+  }
+
+  const dataView = new DataView(ab);
 
   // littleEndian 参数
   // true  表示，低位汇编存储格式 (这里根据Molecule规范, 采用低位存储)
@@ -73,7 +80,10 @@ export const deserializeBytes = (value: Uint8Array): HexType => {
 };
 
 export const deserializeU32 = (value: Uint8Array): HexType => {
-  return `0x${(
-    parseInt(toUint32Le(bytesToHex(value)), 16) & 0xfffffff
-  ).toString(16)}`;
+  // return `0x${(parseInt(toUint32Le(bytesToHex(value)), 16) & 0xfffffff)
+  //   .toString(16)
+  //   .padStart(2, "0")}`;
+
+  const dv = new DataView(value.buffer);
+  return `0x${dv.getUint32(0, true).toString(16)}`;
 };

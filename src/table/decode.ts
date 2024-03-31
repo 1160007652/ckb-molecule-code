@@ -1,17 +1,20 @@
 // table MixedType { f1: Bytes, f2: byte, f3: Uint32, f4: Byte3, f5: Bytes }
 
-import type { HexType, UtilType } from "./types";
+import type { HexType, UtilType } from "../types";
 import {
   deserializeArray,
   deserializeBytes,
   deserializeU32,
   hexToBytes,
-} from "./utils";
+} from "../utils";
 
 // uint32 低位存储, 00 00 00 00
 const offsetSize = 4;
 
-function decode(msg: HexType, moleculeType: UtilType[]): HexType[] {
+export default function decode(
+  msg: HexType,
+  moleculeType: UtilType[]
+): HexType[] {
   const msgBytes = hexToBytes(msg);
 
   const offsetBytes = groupUint8ArrayUint32(
@@ -59,12 +62,3 @@ function groupUint8ArrayUint32(
   }
   return result;
 }
-
-const data =
-  "0x2b000000180000001c0000001d000000210000002400000000000000ab2301000045678903000000abcdef";
-const moleculeType: UtilType[] = ["Bytes", "byte", "Uint32", "Byte3", "Bytes"];
-const result = decode(data, moleculeType);
-
-console.log(data);
-console.log(result);
-console.log(moleculeType);
