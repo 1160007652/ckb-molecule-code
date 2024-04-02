@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { toUint32Le, hexToBytes, bytesToHex, serializeArray } from ".";
+import { toUint32Le, hexToBytes, bytesToHex } from ".";
 
 test("utils: toUint32Le", () => {
   expect(toUint32Le("0x2b")).toBe("0x2b000000");
@@ -20,15 +20,4 @@ test("utils: bytesToHex", () => {
   // 着重测试这两个数据
   expect(bytesToHex(hexToBytes("0x"))).toBe("0x");
   expect(bytesToHex(hexToBytes(0n))).toBe("0x00");
-});
-
-test("utils: serializeArray", () => {
-  expect(serializeArray("0x2b000000")).toBe("0x2b000000");
-  expect(serializeArray("0x123")).toBe("0x0123");
-
-  expect(serializeArray(Uint8Array.from([43, 0, 0, 0]))).toBe("0x2b000000");
-
-  // 着重测试这两个数据
-  expect(serializeArray("0x")).toBe("0x");
-  expect(serializeArray(Uint8Array.from([0, 0, 0, 0]))).toBe("0x00000000");
 });
